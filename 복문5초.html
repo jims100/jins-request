@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎰 30초 스피드 복문 만들기 (SLP 에디션)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(135deg, #FFF5E4 0%, #FFE3E1 50%, #FFD1D1 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body {
+            padding: 12px;
+        }
+
+        .machine-container {
+            background-color: #FFFFFF;
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(255, 107, 129, 0.2), 0 0 0 8px #FFF9F9;
+            width: 100%;
+            max-width: 530px;
+            padding: 22px 18px;
+            text-align: center;
+            border: 4px dashed #FFB7B2;
+            position: relative;
+        }
+
+        .title-badge {
+            background: #FF6B81;
+            color: #FFF;
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            box-shadow: 0 3px 0 #D9455B;
+        }
+
+        h1 {
+            color: #FF6B81;
+            font-size: 1.85rem;
+            margin: 0 0 4px 0;
+            text-shadow: 2px 2px 0px #FFE2E2;
+        }
+
+        .subtitle {
+            color: #7A6B58;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        /* 치료 목표 설정 (연결어미 선택 칩) */
+        .setting-box {
+            background: #F8F9FA;
+            border-radius: 16px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            border: 1px solid #E9ECEF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .setting-label {
+            font-size: 0.85rem;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        .ending-chips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .chip-btn {
+            background: #FFF;
+            border: 1.5px solid #CED4DA;
+            border-radius: 12px;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chip-btn.active {
+            background: #FF6B81;
+            color: #FFF;
+            border-color: #FF6B81;
+            box-shadow: 0 2px 4px rgba(255, 107, 129, 0.4);
+        }
+
+        /* 라운드 & 점수 표시 */
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #FFF0F5;
+            border-radius: 16px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border: 2px solid #FFD1DC;
+            font-size: 1rem;
+        }
+
+        .score-item b {
+            font-size: 1.25rem;
+        }
+
+        .progress-bar-bg {
+            background-color: #E9ECEF;
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #A8E6CF, #FF6B81);
+            height: 100%;
+            width: 10%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* 3단 슬롯머신 (범주A + 연결어미 + 범주B) */
+        .slot-machine-stage {
+            background: linear-gradient(180deg, #F0F8FF 0%, #E6F3FF 100%);
+            border-radius: 22px;
+            padding: 14px 10px;
+            border: 3px solid #BEE3F8;
+            margin-bottom: 14px;
+            box-shadow: inset 0 -4px 0 #A0D2EB;
+        }
+
+        .slots-wrap {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slot-box {
+            flex: 1.1;
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 8px 4px;
+            border: 3px solid #FFD93D;
+            box-shadow: 0 4px 0 #E2B900;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 가운데 연결어미 슬롯 전용 스타일 */
+        .slot-box.ending-slot {
+            flex: 0.9;
+            background: #FFF9E6;
+            border-color: #FF9F45;
+            box-shadow: 0 4px 0 #D97724;
+        }
+
+        .slot-tag {
+            font-size: 0.75rem;
+            background-color: #FFF9E6;
+            color: #B7791F;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+
+        .slot-box.ending-slot .slot-tag {
+            background-color: #FFE8D6;
+            color: #C05621;
+        }
+
+        .slot-text {
+            font-size: 1.15rem;
+            color: #2D3748;
+            word-break: keep-all;
+            line-height: 1.2;
+        }
+
+        .slot-box.rolling .slot-text {
+            animation: slotRoll 0.1s infinite linear;
+            color: #A0AEC0;
+        }
+
+        @keyframes slotRoll {
+            0% { transform: translateY(-25px); opacity: 0.4; }
+            50% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(25px); opacity: 0.4; }
+        }
+
+        /* 버튼 */
+        button {
+            font-family: 'Jua', sans-serif;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 10px;
+            font-size: 1.05rem;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none !important;
+        }
+
+        .btn-step1 {
+            width: 100%;
+            background-color: #FFD93D;
+            color: #6A4B00;
+            box-shadow: 0 4px 0 #DDAF00;
+            margin-bottom: 12px;
+            padding: 13px;
+            font-size: 1.15rem;
+        }
+
+        /* 복문 가이드 카드 */
+        .guide-card {
+            background-color: #FFFDF0;
+            border-radius: 20px;
+            padding: 14px 12px;
+            border: 3px solid #F6E05E;
+            margin-bottom: 12px;
+            text-align: left;
+            display: none;
+            animation: popUp 0.3s ease;
+        }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .guide-title {
+            font-size: 0.9rem;
+            color: #B7791F;
+            margin-bottom: 8px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .point-tag {
+            background: #EBF8FF;
+            color: #2B6CB0;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .guide-text {
+            font-size: 1.18rem;
+            line-height: 1.65;
+            color: #2D3748;
+            word-break: keep-all;
+            background: #FFF;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px dashed #ECC94B;
+        }
+
+        .guide-text mark {
+            background-color: #FFE4E6;
+            color: #E53E3E;
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-weight: bold;
+        }
+
+        .connect-mark {
+            color: #D69E2E;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .josa-mark {
+            color: #3182CE;
+            font-weight: bold;
+        }
+
+        .guide-blank {
+            display: inline-block;
+            min-width: 45px;
+            border-bottom: 2px solid #A0AEC0;
+            text-align: center;
+            color: #A0AEC0;
+            font-size: 0.9rem;
+        }
+
+        /* 🔥 시각적 실시간 게이지 타이머 */
+        .timer-container {
+            margin-top: 10px;
+            background: #FFFFFF;
+            padding: 8px 12px;
+            border-radius: 14px;
+            border: 2px solid #E2E8F0;
+        }
+
+        .timer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .timer-title {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .timer-num {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .timer-gauge-bg {
+            width: 100%;
+            height: 14px;
+            background-color: #EDF2F7;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timer-gauge-fill {
+            height: 100%;
+            width: 100%;
+            background-color: #4CAF50; /* 기본 초록 */
+            border-radius: 20px;
+            transition: width 1s linear, background-color 0.4s ease;
+        }
+
+        /* 타이머 컬러 변화 상태 클래스 */
+        .timer-gauge-fill.state-green { background-color: #4CAF50; }
+        .timer-gauge-fill.state-orange { background-color: #FF9800; }
+        .timer-gauge-fill.state-red { 
+            background-color: #F44336; 
+            animation: pulseGlow 0.5s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { opacity: 0.85; }
+            to { opacity: 1; }
+        }
+
+        .timer-num.urgent {
+            color: #F44336;
+            animation: shake 0.3s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* 액션 버튼 */
+        .action-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .btn-timer {
+            background-color: #FF9F45;
+            color: #FFF;
+            box-shadow: 0 4px 0 #D97724;
+            flex: 1.3;
+            font-size: 1.1rem;
+        }
+
+        .btn-hint {
+            background-color: #A8E6CF;
+            color: #1D6F42;
+            box-shadow: 0 4px 0 #7BCB9F;
+            flex: 1;
+        }
+
+        /* 3단계 판정 버튼 (완벽성공 / 부분성공 / 패스) */
+        .judge-group {
+            display: none;
+            gap: 6px;
+            margin-top: 8px;
+            animation: popUp 0.25s ease;
+        }
+
+        .btn-success {
+            background-color: #66BB6A;
+            color: #FFF;
+            flex: 1.2;
+            padding: 12px 6px;
+            font-size: 1.05rem;
+            box-shadow: 0 4px 0 #43A047;
+        }
+
+        .btn-partial {
+            background-color: #FFA726;
+            color: #FFF;
+            flex: 1;
+            padding: 12px 6px;
+            font-size: 1rem;
+            box-shadow: 0 4px 0 #FB8C00;
+        }
+
+        .btn-fail {
+            background-color: #EF5350;
+            color: #FFF;
+            flex: 0.9;
+            padding: 12px 6px;
+            font-size: 1rem;
+            box-shadow: 0 4px 0 #E53935;
+        }
+
+        /* 힌트 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background: #FFF;
+            border-radius: 24px;
+            max-width: 440px;
+            width: 100%;
+            padding: 20px 16px;
+            text-align: center;
+            border: 4px solid #A8E6CF;
+            animation: popUp 0.25s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            color: #2F855A;
+            margin-bottom: 4px;
+        }
+
+        .modal-warn {
+            color: #E53E3E;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .hint-section {
+            background: #F0FFF4;
+            border-radius: 14px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .hint-name {
+            font-size: 0.95rem;
+            color: #276749;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .hint-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .hint-pill {
+            background: #FFF;
+            color: #22543D;
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            border: 1px solid #9AE6B4;
+        }
+
+        .hint-verbs {
+            font-size: 0.8rem;
+            color: #2C7A7B;
+        }
+
+        .hint-example-box {
+            background: #FFFBEB;
+            border: 2px dashed #F6AD55;
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+        .example-title {
+            font-size: 0.9rem;
+            color: #C05621;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .example-text {
+            font-size: 1.05rem;
+            color: #2D3748;
+            line-height: 1.5;
+            word-break: keep-all;
+        }
+
+        .btn-close-modal {
+            background: #68D391;
+            color: #FFF;
+            padding: 10px 24px;
+            border-radius: 14px;
+            font-size: 1rem;
+        }
+
+        /* 최종 결과 화면 */
+        .result-screen {
+            display: none;
+            padding: 20px 0;
+            animation: popUp 0.4s ease;
+        }
+
+        .final-score {
+            font-size: 3.5rem;
+            color: #FF6B81;
+            margin: 10px 0;
+            text-shadow: 2px 2px 0 #FFE2E2;
+        }
+
+        .result-badge {
+            display: inline-block;
+            background: #FFF3C4;
+            color: #975A16;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            border: 2px solid #F6E05E;
+            margin-bottom: 15px;
+        }
+
+        .btn-restart {
+            background: #FFD93D;
+            color: #5C4300;
+            padding: 13px 28px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 0 #DDAF00;
+        }
+    </style>
+</head>
+<body>
+
+<div class="machine-container">
+    <div id="playArea">
+        <div class="title-badge">🗣️ SLP 언어치료 스피드 복문 훈련</div>
+        <h1>🎰 30초 스피드 복문 만들기</h1>
+        <div class="subtitle">다양한 연결어미로 자연스러운 복문을 말해요!</div>
+
+        <!-- 치료 목표 설정 (연결어미 필터) -->
+        <div class="setting-box">
+            <span class="setting-label">🎯 연결어미 목표:</span>
+            <div class="ending-chips" id="endingChips">
+                <button type="button" class="chip-btn active" data-ending="random">🎲 랜덤</button>
+                <button type="button" class="chip-btn" data-ending="and">~고</button>
+                <button type="button" class="chip-btn" data-ending="after">~고 나서</button>
+                <button type="button" class="chip-btn" data-ending="contrast">~지만</button>
+                <button type="button" class="chip-btn" data-ending="condition">~으면</button>
+            </div>
+        </div>
+
+        <!-- 라운드 & 점수 표시 (10라운드 최적화) -->
+        <div class="score-board">
+            <div class="score-item">🚩 라운드: <b id="roundText" style="color:#2B6CB0;">1 / 10</b></div>
+            <div class="score-item">🏆 점수: <b id="scoreText" style="color:#FF6B81;">0</b> / 100점</div>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+
+        <!-- 3단 슬롯 머신 스테이지 -->
+        <div class="slot-machine-stage">
+            <div class="slots-wrap">
+                <!-- 1번 슬롯 -->
+                <div class="slot-box" id="slotA">
+                    <div class="slot-tag" id="tagA">1번 범주어</div>
+                    <div class="slot-text" id="textA">🎲 ? ? ?</div>
+                </div>
+                
+                <!-- 중앙 연결어미 슬롯 -->
+                <div class="slot-box ending-slot" id="slotEnding">
+                    <div class="slot-tag">연결어미</div>
+                    <div class="slot-text" id="textEnding" style="color:#D69E2E; font-weight:bold;">🔗 ? ?</div>
+                </div>
+
+                <!-- 2번 슬롯 -->
+                <div class="slot-box" id="slotB">
+                    <div class="slot-tag" id="tagB">2번 범주어</div>
+                    <div class="slot-text" id="textB">🎲 ? ? ?</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1단계 슬롯 돌리기 버튼 -->
+        <button type="button" class="btn-step1" id="btnStep1">🎲 슬롯 차례로 뽑기</button>
+
+        <!-- 복문 가이드 카드 -->
+        <div class="guide-card" id="guideCard">
+            <div class="guide-title">
+                <span>📢 빈칸을 채워 문장을 소리 내어 말해요!</span>
+                <span class="point-tag" id="pointTag">성공: +10점</span>
+            </div>
+            <div class="guide-text" id="guideText">가이드라인이 여기에 표시됩니다.</div>
+            
+            <!-- 🔥 시각적 게이지 타이머 바 -->
+            <div class="timer-container">
+                <div class="timer-header">
+                    <span class="timer-title">⏳ 남은 도전 시간</span>
+                    <span class="timer-num" id="timerDisplay">30초</span>
+                </div>
+                <div class="timer-gauge-bg">
+                    <div class="timer-gauge-fill state-green" id="timerGauge"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div class="action-group">
+            <button type="button" class="btn-timer" id="btnTimer" disabled>⏰ 30초 도전 시작!</button>
+            <button type="button" class="btn-hint" id="btnHint" disabled>👀 낱말 힌트 (-3점)</button>
+        </div>
+
+        <!-- 세분화된 치료사 판정 버튼 (완벽 / 부분성공 / 패스) -->
+        <div class="judge-group" id="judgeGroup">
+            <button type="button" class="btn-success" id="btnSuccess">⭕ 완벽해요!</button>
+            <button type="button" class="btn-partial" id="btnPartial">🔺 부분 성공</button>
+            <button type="button" class="btn-fail" id="btnFail">❌ 다시 도전</button>
+        </div>
+    </div>
+
+    <!-- 10라운드 완주 최종 결과 화면 -->
+    <div class="result-screen" id="resultArea">
+        <div style="font-size: 3.8rem;">🎖️ 🏆 👑</div>
+        <h2 style="color:#FF6B81; margin: 8px 0;">10라운드 모두 완주!</h2>
+        <div class="final-score" id="finalScoreDisplay">0점</div>
+        <div class="result-badge" id="resultBadge">멋진 복문 박사님!</div>
+        <p style="color:#666; font-size:1.05rem; margin-bottom: 22px;" id="resultMsg">다양한 연결어미를 아주 잘 활용했어요!</p>
+        <button type="button" class="btn-restart" id="btnRestart">🔄 처음부터 다시 하기</button>
+    </div>
+</div>
+
+<!-- 낱말 힌트 모달 -->
+<div class="modal-overlay" id="hintModal">
+    <div class="modal-content">
+        <div class="modal-title">💡 낱말 힌트 & 모범 문장</div>
+        <div class="modal-warn">※ 힌트를 참고하여 이번 문제는 성공 시 점수가 차감 적용됩니다.</div>
+        
+        <div class="hint-section">
+            <div class="hint-name" id="modalCategoryA">1번 범주어</div>
+            <div class="hint-pills" id="modalWordsA"></div>
+            <div class="hint-verbs" id="modalVerbsA">추천 서술어: </div>
+        </div>
+
+        <div class="hint-section">
+            <div class="hint-name" id="modalCategoryB">2번 범주어</div>
+            <div class="hint-pills" id="modalWordsB"></div>
+            <div class="hint-verbs" id="modalVerbsB">추천 서술어: </div>
+        </div>
+
+        <div class="hint-example-box">
+            <div class="example-title">🗣️ 이렇게 말해보세요! (완성 예시)</div>
+            <div class="example-text" id="modalExampleSentence"></div>
+        </div>
+
+        <button type="button" class="btn-close-modal" id="btnCloseModal">닫고 말하기</button>
+    </div>
+</div>
+
+<script>
+    // 30개 언어치료 범주어 데이터셋
+    const quizData = [
+        { id: 1, topic: "동물", category: "동물", words: ["강아지", "고양이", "호랑이", "사자", "토끼", "기린"], josaObj: "를", josaSub: "는", verbs: "보고, 만지고, 키우고", exWords: "강아지, 고양이, 토끼", vAction: "보고", vState: "귀엽지만", vDone: "보았다", vEnd: "보겠다" },
+        { id: 2, topic: "동물", category: "새", words: ["참새", "비둘기", "까마귀", "앵무새", "오리", "독수리"], josaObj: "를", josaSub: "는", verbs: "보고, 모이 주고, 찾고", exWords: "참새, 비둘기, 오리", vAction: "모이 주고", vState: "빠르지만", vDone: "찾았다", vEnd: "찾겠다" },
+        { id: 3, topic: "식물", category: "과일", words: ["사과", "바나나", "딸기", "포도", "수박", "귤"], josaObj: "를", josaSub: "는", verbs: "먹고, 사고, 씻고", exWords: "사과, 바나나, 딸기", vAction: "먹고", vState: "달콤하지만", vDone: "샀다", vEnd: "먹겠다" },
+        { id: 4, topic: "식물", category: "채소", words: ["당근", "오이", "양파", "배추", "브로콜리", "감자"], josaObj: "를", josaSub: "는", verbs: "씻고, 요리하고, 먹고", exWords: "당근, 오이, 감자", vAction: "씻고", vState: "싱싱하지만", vDone: "요리했다", vEnd: "먹겠다" },
+        { id: 5, topic: "음식", category: "음식", words: ["김밥", "떡볶이", "계란말이", "미역국", "불고기", "주먹밥"], josaObj: "를", josaSub: "는", verbs: "먹고, 만들고, 주문하고", exWords: "김밥, 떡볶이, 불고기", vAction: "먹고", vState: "맛있지만", vDone: "만들었다", vEnd: "먹겠다" },
+        { id: 6, topic: "음식", category: "간식", words: ["빵", "피자", "도넛", "쿠키", "사탕", "초콜릿"], josaObj: "를", josaSub: "는", verbs: "사먹고, 고르고, 나누고", exWords: "빵, 피자, 사탕", vAction: "나누어 먹고", vState: "달콤하지만", vDone: "골랐다", vEnd: "사먹겠다" },
+        { id: 7, topic: "우리 집", category: "집 장소", words: ["거실", "안방", "내 방", "화장실", "부엌", "베란다"], josaObj: "를", josaSub: "는", verbs: "청소하고, 정리하고, 둘러보고", exWords: "거실, 안방, 부엌", vAction: "정리하고", vState: "넓지만", vDone: "쉬었다", vEnd: "정리하겠다" },
+        { id: 8, topic: "우리 집", category: "가구", words: ["침대", "책상", "TV", "냉장고", "옷장", "소파"], josaObj: "를", josaSub: "는", verbs: "닦고, 정리하고, 사고", exWords: "침대, 책상, 옷장", vAction: "닦고", vState: "무겁지만", vDone: "정리했다", vEnd: "닦겠다" },
+        { id: 9, topic: "의류", category: "옷", words: ["티셔츠", "셔츠", "후드티", "패딩", "점퍼", "바지"], josaObj: "를", josaSub: "는", verbs: "입고, 사고, 빨고", exWords: "티셔츠, 후드티, 점퍼", vAction: "입고", vState: "따뜻하지만", vDone: "빨았다", vEnd: "입겠다" },
+        { id: 10, topic: "의류", category: "신발", words: ["운동화", "슬리퍼", "장화", "실내화", "샌들", "구두"], josaObj: "를", josaSub: "는", verbs: "신어보고, 사고, 닦고", exWords: "운동화, 장화, 샌들", vAction: "신고", vState: "편하지만", vDone: "샀다", vEnd: "신겠다" },
+        { id: 11, topic: "교통", category: "탈것", words: ["버스", "자전거", "자동차", "기차", "택시", "경찰차"], josaObj: "를", josaSub: "는", verbs: "타고, 타고 가고, 보고", exWords: "버스, 자동차, 자전거", vAction: "타고", vState: "빠르지만", vDone: "보았다", vEnd: "타겠다" },
+        { id: 12, topic: "교통", category: "비행기·배", words: ["비행기", "헬리콥터", "배", "우주선", "열기구", "보트"], josaObj: "를", josaSub: "는", verbs: "타고, 구경하고, 바라보고", exWords: "비행기, 헬리콥터, 배", vAction: "구경하고", vState: "신기하지만", vDone: "구경했다", vEnd: "타겠다" },
+        { id: 13, topic: "사람", category: "선생님", words: ["담임선생님", "영양사", "보건선생님", "체육선생님", "미술선생님", "음악선생님"], josaObj: "을", josaSub: "은", verbs: "만나고, 인사하고, 돕고", exWords: "담임선생님, 보건선생님, 체육선생님", vAction: "만나고", vState: "친절하시지만", vDone: "인사했다", vEnd: "만나겠다" },
+        { id: 14, topic: "사람", category: "직업", words: ["경찰관", "소방관", "의사", "요리사", "택배기사", "환경미화원"], josaObj: "을", josaSub: "은", verbs: "만나고, 보고, 응원하고", exWords: "경찰관, 소방관, 의사", vAction: "응원하고", vState: "멋있지만", vDone: "만났다", vEnd: "되겠다" },
+        { id: 15, topic: "학용품", category: "필기구", words: ["연필", "볼펜", "지우개", "색연필", "싸인펜", "형광펜"], josaObj: "를", josaSub: "는", verbs: "쓰고, 그리고, 색칠하고", exWords: "연필, 볼펜, 색연필", vAction: "사용하고", vState: "알록달록하지만", vDone: "썼다", vEnd: "쓰겠다" },
+        { id: 16, topic: "학용품", category: "가방 소품", words: ["공책", "필통", "자", "가위", "풀", "스케치북"], josaObj: "를", josaSub: "는", verbs: "챙기고, 정리하고, 넣고", exWords: "공책, 필통, 가위", vAction: "챙기고", vState: "필요하지만", vDone: "정리했다", vEnd: "챙기겠다" },
+        { id: 17, topic: "놀이", category: "운동", words: ["축구", "야구", "농구", "피구", "줄넘기", "태권도"], josaObj: "를", josaSub: "는", verbs: "하고, 배우고, 즐기고", exWords: "축구, 야구, 농구", vAction: "하고", vState: "신나지만", vDone: "배웠다", vEnd: "하겠다" },
+        { id: 18, topic: "놀이", category: "놀이", words: ["숨바꼭질", "얼음땡", "무궁화꽃", "공기놀이", "팽이치기", "종이접기"], josaObj: "를", josaSub: "는", verbs: "하고, 즐기고, 시작하고", exWords: "숨바꼭질, 얼음땡, 공기놀이", vAction: "하고", vState: "재미있지만", vDone: "즐겼다", vEnd: "놀겠다" },
+        { id: 19, topic: "장소", category: "놀이터·파크", words: ["놀이터", "놀이공원", "워터파크", "키즈카페", "영화관", "동물원"], josaObj: "를", josaSub: "는", verbs: "찾아가고, 방문하고, 즐기고", exWords: "놀이터, 놀이공원, 워터파크", vAction: "방문하고", vState: "즐겁지만", vDone: "놀았다", vEnd: "가겠다" },
+        { id: 20, topic: "장소", category: "학습장소", words: ["도서관", "박물관", "미술관", "수족관", "과학관", "식물원"], josaObj: "를", josaSub: "는", verbs: "방문하고, 구경하고, 관람하고", exWords: "도서관, 박물관, 수족관", vAction: "관람하고", vState: "조용하지만", vDone: "구경했다", vEnd: "가겠다" },
+        { id: 21, topic: "계절과 날씨", category: "날씨", words: ["비", "눈", "바람", "무지개", "태풍", "안개"], josaObj: "를", josaSub: "는", verbs: "바라보고, 맞이하고, 피하고", exWords: "비, 눈, 바람", vAction: "피하고", vState: "차갑지만", vDone: "바라보았다", vEnd: "피하겠다" },
+        { id: 22, topic: "계절과 날씨", category: "날씨 용품", words: ["우산", "선풍기", "핫팩", "목도리", "물총", "장갑"], josaObj: "를", josaSub: "는", verbs: "챙기고, 쓰고, 준비하고", exWords: "우산, 선풍기, 장갑", vAction: "챙기고", vState: "작지만", vDone: "썼다", vEnd: "챙기겠다" },
+        { id: 23, topic: "우리 몸", category: "신체 부위", words: ["손가락", "발가락", "배꼽", "무릎", "팔꿈치", "엉덩이"], josaObj: "를", josaSub: "는", verbs: "만지고, 씻고, 움직이고", exWords: "손가락, 무릎, 팔꿈치", vAction: "움직이고", vState: "튼튼하지만", vDone: "씻었다", vEnd: "움직이겠다" },
+        { id: 24, topic: "우리 몸", category: "감각 기관", words: ["눈", "코", "입", "귀", "혀", "피부"], josaObj: "를", josaSub: "는", verbs: "살펴보고, 보호하고, 씻고", exWords: "눈, 코, 귀", vAction: "살펴보고", vState: "소중하지만", vDone: "보호했다", vEnd: "보호하겠다" },
+        { id: 25, topic: "전자제품", category: "생활 가전", words: ["컴퓨터", "스마트폰", "세탁기", "에어컨", "청소기", "TV"], josaObj: "를", josaSub: "는", verbs: "켜고, 쓰고, 청소하고", exWords: "컴퓨터, 세탁기, 에어컨", vAction: "켜고", vState: "편리하지만", vDone: "썼다", vEnd: "켜겠다" },
+        { id: 26, topic: "전자제품", category: "주방 가전", words: ["전자레인지", "정수기", "토스터", "밥솥", "에어프라이어", "믹서기"], josaObj: "를", josaSub: "는", verbs: "쓰고, 돌리고, 닦고", exWords: "전자레인지, 밥솥, 믹서기", vAction: "돌리고", vState: "뜨겁지만", vDone: "썼다", vEnd: "돌리겠다" },
+        { id: 27, topic: "자연", category: "우주·하늘", words: ["태양", "달", "별", "구름", "인공위성", "지구"], josaObj: "를", josaSub: "는", verbs: "바라보고, 관찰하고, 찾고", exWords: "태양, 달, 별", vAction: "관찰하고", vState: "아름답지만", vDone: "찾았다", vEnd: "바라보겠다" },
+        { id: 28, topic: "자연", category: "자연 풍경", words: ["산", "바다", "강", "동굴", "섬", "계곡"], josaObj: "를", josaSub: "는", verbs: "산책하고, 구경하고, 찾아가고", exWords: "산, 바다, 계곡", vAction: "구경하고", vState: "웅장하지만", vDone: "산책했다", vEnd: "찾아가겠다" },
+        { id: 29, topic: "생활 용품", category: "욕실 용품", words: ["수건", "치약", "칫솔", "비누", "샴푸", "휴지"], josaObj: "를", josaSub: "는", verbs: "쓰고, 씻고, 닦고", exWords: "수건, 비누, 샴푸", vAction: "사용하고", vState: "깨끗하지만", vDone: "씻었다", vEnd: "쓰겠다" },
+        { id: 30, topic: "생활 용품", category: "주방 용품", words: ["숟가락", "젓가락", "컵", "접시", "냄비", "프라이팬"], josaObj: "를", josaSub: "는", verbs: "쓰고, 설거지하고, 닦고", exWords: "숟가락, 젓가락, 냄비", vAction: "설거지하고", vState: "단단하지만", vDone: "정리했다", vEnd: "닦겠다" }
+    ];
+
+    // 4대 연결어미 템플릿 엔진
+    const endingTemplates = {
+        and: {
+            name: "~고 (나열)",
+            slotText: "🔗 ~고",
+            buildGuide: (catA, catB, itemA, itemB) => `
+                <mark>[${catA} 3개]</mark><span class="josa-mark">${itemA.josaObj}</span> <span class="guide-blank">____</span><span class="connect-mark">고,</span><br>
+                <mark>[${catB} 3개]</mark><span class="josa-mark">${itemB.josaObj}</span> <span class="guide-blank">____</span><b>다.</b>
+            `,
+            buildExample: (itemA, itemB) => `"${itemA.exWords}<b>${itemA.josaObj} ${itemA.vAction}</b>, ${itemB.exWords}<b>${itemB.josaObj} ${itemB.vDone}</b>."`
+        },
+        after: {
+            name: "~고 나서 (시간순서)",
+            slotText: "⏳ ~고 나서",
+            buildGuide: (catA, catB, itemA, itemB) => `
+                <mark>[${catA} 3개]</mark><span class="josa-mark">${itemA.josaObj}</span> <span class="guide-blank">____</span><span class="connect-mark">고 나서,</span><br>
+                <mark>[${catB} 3개]</mark><span class="josa-mark">${itemB.josaObj}</span> <span class="guide-blank">____</span><b>다.</b>
+            `,
+            buildExample: (itemA, itemB) => `"${itemA.exWords}<b>${itemA.josaObj} ${itemA.vAction} 나서</b>, ${itemB.exWords}<b>${itemB.josaObj} ${itemB.vDone}</b>."`
+        },
+        contrast: {
+            name: "~지만 (대조)",
+            slotText: "⚖️ ~지만",
+            buildGuide: (catA, catB, itemA, itemB) => `
+                <mark>[${catA} 3개]</mark><span class="josa-mark">${itemA.josaSub}</span> <span class="guide-blank">____</span><span class="connect-mark">지만,</span><br>
+                <mark>[${catB} 3개]</mark><span class="josa-mark">${itemB.josaSub}</span> <span class="guide-blank">____</span><b>다.</b>
+            `,
+            buildExample: (itemA, itemB) => `"${itemA.exWords}<b>${itemA.josaSub} ${itemA.vState}</b>, ${itemB.exWords}<b>${itemB.josaSub} ${itemB.vDone}</b>."`
+        },
+        condition: {
+            name: "~으면 (조건)",
+            slotText: "💡 ~으면",
+            buildGuide: (catA, catB, itemA, itemB) => `
+                <mark>[${catA} 3개]</mark><span class="josa-mark">${itemA.josaObj}</span> <span class="guide-blank">다 ____</span><span class="connect-mark">면,</span><br>
+                <mark>[${catB} 3개]</mark><span class="josa-mark">${itemB.josaObj}</span> <span class="guide-blank">____</span><b>겠다.</b>
+            `,
+            buildExample: (itemA, itemB) => `"${itemA.exWords}<b>${itemA.josaObj} 다 보면</b>, ${itemB.exWords}<b>${itemB.josaObj} ${itemB.vEnd}</b>."`
+        }
+    };
+
+    // 게임 상태
+    const TOTAL_ROUNDS = 10; // 아동 피로도 고려 10라운드 최적화
+    let currentRound = 1;
+    let currentScore = 0;
+    let isHintUsed = false;
+    let selectedEndingKey = "random";
+
+    let selectedItemA = null;
+    let selectedItemB = null;
+    let activeEnding = null;
+
+    let timerInterval = null;
+    const TIME_LIMIT = 30;
+    let timeLeft = TIME_LIMIT;
+
+    // Web Audio API
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) {
+            try {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioClass) audioCtx = new AudioClass();
+            } catch(e) {}
+        }
+        return audioCtx;
+    }
+
+    function playSound(type) {
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'slot') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400 + Math.random() * 200, now);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'stop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(700, now);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'tick') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(850, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            } else if (type === 'urgent') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1200, now);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'timeout') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(450, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.4);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'success') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.connect(g);
+                    g.connect(ctx.destination);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(f, now + i * 0.07);
+                    g.gain.setValueAtTime(0.2, now + i * 0.07);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.12);
+                    o.start(now + i * 0.07);
+                    o.stop(now + i * 0.07 + 0.12);
+                });
+            } else if (type === 'partial') {
+                [523.25, 659.25].forEach((f, i) => {
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.connect(g);
+                    g.connect(ctx.destination);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(f, now + i * 0.09);
+                    g.gain.setValueAtTime(0.18, now + i * 0.09);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.12);
+                    o.start(now + i * 0.09);
+                    o.stop(now + i * 0.09 + 0.12);
+                });
+            } else if (type === 'fail') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(240, now);
+                osc.frequency.linearRampToValueAtTime(140, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        } catch(e){}
+    }
+
+    // 연결어미 선택 칩 이벤트
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedEndingKey = this.dataset.ending;
+        });
+    });
+
+    // 3단 순차 슬롯 머신 돌리기
+    function spinCategoriesSequential() {
+        resetRoundUI();
+
+        const slotA = document.getElementById('slotA');
+        const slotEnding = document.getElementById('slotEnding');
+        const slotB = document.getElementById('slotB');
+
+        const textA = document.getElementById('textA');
+        const textEnding = document.getElementById('textEnding');
+        const textB = document.getElementById('textB');
+
+        const tagA = document.getElementById('tagA');
+        const tagB = document.getElementById('tagB');
+        const btnStep1 = document.getElementById('btnStep1');
+
+        btnStep1.disabled = true;
+
+        // 1. 슬롯 A 롤링
+        slotA.classList.add('rolling');
+        let rollA = setInterval(() => {
+            const r = quizData[Math.floor(Math.random() * quizData.length)];
+            textA.innerText = r.category;
+            playSound('slot');
+        }, 75);
+
+        setTimeout(() => {
+            clearInterval(rollA);
+            slotA.classList.remove('rolling');
+            const idxA = Math.floor(Math.random() * quizData.length);
+            selectedItemA = quizData[idxA];
+            tagA.innerText = selectedItemA.topic;
+            textA.innerText = selectedItemA.category;
+            playSound('stop');
+
+            // 2. 중앙 연결어미 슬롯 롤링
+            slotEnding.classList.add('rolling');
+            const endingKeys = ["and", "after", "contrast", "condition"];
+            let rollE = setInterval(() => {
+                const randK = endingKeys[Math.floor(Math.random() * endingKeys.length)];
+                textEnding.innerText = endingTemplates[randK].slotText;
+                playSound('slot');
+            }, 75);
+
+            setTimeout(() => {
+                clearInterval(rollE);
+                slotEnding.classList.remove('rolling');
+
+                // 고정된 타겟이 있으면 그것을 쓰고, 'random'이면 무작위 추첨
+                if (selectedEndingKey === 'random') {
+                    const pickedKey = endingKeys[Math.floor(Math.random() * endingKeys.length)];
+                    activeEnding = endingTemplates[pickedKey];
+                } else {
+                    activeEnding = endingTemplates[selectedEndingKey];
+                }
+                textEnding.innerText = activeEnding.slotText;
+                playSound('stop');
+
+                // 3. 슬롯 B 롤링
+                slotB.classList.add('rolling');
+                let rollB = setInterval(() => {
+                    const r = quizData[Math.floor(Math.random() * quizData.length)];
+                    textB.innerText = r.category;
+                    playSound('slot');
+                }, 75);
+
+                setTimeout(() => {
+                    clearInterval(rollB);
+                    slotB.classList.remove('rolling');
+
+                    let idxB = Math.floor(Math.random() * quizData.length);
+                    while (idxA === idxB) {
+                        idxB = Math.floor(Math.random() * quizData.length);
+                    }
+                    selectedItemB = quizData[idxB];
+                    tagB.innerText = selectedItemB.topic;
+                    textB.innerText = selectedItemB.category;
+                    playSound('stop');
+
+                    btnStep1.disabled = false;
+                    showGuideCard();
+                }, 600);
+
+            }, 600);
+
+        }, 600);
+    }
+
+    // 복문 가이드 카드 생성
+    function showGuideCard() {
+        const guideCard = document.getElementById('guideCard');
+        const guideText = document.getElementById('guideText');
+        const btnTimer = document.getElementById('btnTimer');
+        const btnHint = document.getElementById('btnHint');
+        const pointTag = document.getElementById('pointTag');
+
+        // 선택된 연결어미의 템플릿 엔진으로 문장 프레임 완성
+        guideText.innerHTML = activeEnding.buildGuide(
+            selectedItemA.category, 
+            selectedItemB.category,
+            selectedItemA,
+            selectedItemB
+        );
+
+        guideCard.style.display = 'block';
+        pointTag.innerText = isHintUsed ? "성공: +7점 (힌트사용)" : "성공: +10점";
+        btnTimer.disabled = false;
+        btnHint.disabled = false;
+
+        resetVisualTimer();
+        document.getElementById('judgeGroup').style.display = 'none';
+    }
+
+    // 🔥 실시간 시각적 게이지 타이머 구동 로직
+    function resetVisualTimer() {
+        clearInterval(timerInterval);
+        timeLeft = TIME_LIMIT;
+        const timerDisplay = document.getElementById('timerDisplay');
+        const gauge = document.getElementById('timerGauge');
+
+        timerDisplay.innerText = `${timeLeft}초`;
+        timerDisplay.classList.remove('urgent');
+
+        gauge.style.width = '100%';
+        gauge.className = 'timer-gauge-fill state-green';
+    }
+
+    function startTimer() {
+        if (!selectedItemA || !selectedItemB || !activeEnding) return;
+
+        clearInterval(timerInterval);
+        resetVisualTimer();
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const gauge = document.getElementById('timerGauge');
+        const btnTimer = document.getElementById('btnTimer');
+
+        btnTimer.disabled = true;
+        document.getElementById('judgeGroup').style.display = 'flex';
+        playSound('tick');
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = `${timeLeft}초`;
+
+            // 게이지 너비 % 업데이트
+            const pct = Math.max(0, (timeLeft / TIME_LIMIT) * 100);
+            gauge.style.width = `${pct}%`;
+
+            // 초록 ➡️ 주황 ➡️ 빨강 동적 클래스 스위칭
+            if (timeLeft > 15) {
+                gauge.className = 'timer-gauge-fill state-green';
+            } else if (timeLeft > 5) {
+                gauge.className = 'timer-gauge-fill state-orange';
+                playSound('tick');
+            } else if (timeLeft > 0) {
+                gauge.className = 'timer-gauge-fill state-red';
+                timerDisplay.classList.add('urgent');
+                playSound('urgent');
+            } else {
+                // 시간 초과 (땡!)
+                clearInterval(timerInterval);
+                timerDisplay.innerText = "땡!";
+                gauge.style.width = "0%";
+                playSound('timeout');
+                btnTimer.disabled = false;
+            }
+        }, 1000);
+    }
+
+    // 힌트 모달
+    function openHintModal() {
+        if (!selectedItemA || !selectedItemB) return;
+
+        isHintUsed = true;
+        document.getElementById('pointTag').innerText = "성공: +7점 (힌트사용)";
+
+        // 1번 범주
+        document.getElementById('modalCategoryA').innerText = `✨ 1번: ${selectedItemA.topic} > ${selectedItemA.category}`;
+        document.getElementById('modalWordsA').innerHTML = selectedItemA.words.map(w => `<span class="hint-pill">${w}</span>`).join('');
+        document.getElementById('modalVerbsA').innerHTML = `추천 서술어: <b>${selectedItemA.verbs}</b>`;
+
+        // 2번 범주
+        document.getElementById('modalCategoryB').innerText = `✨ 2번: ${selectedItemB.topic} > ${selectedItemB.category}`;
+        document.getElementById('modalWordsB').innerHTML = selectedItemB.words.map(w => `<span class="hint-pill">${w}</span>`).join('');
+        document.getElementById('modalVerbsB').innerHTML = `추천 서술어: <b>${selectedItemB.verbs}</b>`;
+
+        // 맞춤형 모범 문장 생성
+        const sampleText = activeEnding.buildExample(selectedItemA, selectedItemB);
+        document.getElementById('modalExampleSentence').innerHTML = sampleText;
+
+        document.getElementById('hintModal').style.display = 'flex';
+    }
+
+    function closeHintModal() {
+        document.getElementById('hintModal').style.display = 'none';
+    }
+
+    // 판정 및 점수 계산 (성공/부분성공/패스)
+    function recordResult(type) {
+        clearInterval(timerInterval);
+
+        if (type === 'success') {
+            playSound('success');
+            const gained = isHintUsed ? 7 : 10;
+            currentScore += gained;
+        } else if (type === 'partial') {
+            playSound('partial');
+            const gained = isHintUsed ? 4 : 5;
+            currentScore += gained;
+        } else {
+            playSound('fail');
+        }
+
+        document.getElementById('scoreText').innerText = currentScore;
+        document.getElementById('judgeGroup').style.display = 'none';
+
+        if (currentRound >= TOTAL_ROUNDS) {
+            showFinalResult();
+        } else {
+            currentRound++;
+            updateHeaderUI();
+            resetRoundUI();
+        }
+    }
+
+    function updateHeaderUI() {
+        document.getElementById('roundText').innerText = `${currentRound} / ${TOTAL_ROUNDS}`;
+        const percent = (currentRound / TOTAL_ROUNDS) * 100;
+        document.getElementById('progressBar').style.width = `${percent}%`;
+    }
+
+    function resetRoundUI() {
+        clearInterval(timerInterval);
+        isHintUsed = false;
+        document.getElementById('guideCard').style.display = 'none';
+        document.getElementById('btnTimer').disabled = true;
+        document.getElementById('btnHint').disabled = true;
+        document.getElementById('judgeGroup').style.display = 'none';
+        resetVisualTimer();
+    }
+
+    function showFinalResult() {
+        clearInterval(timerInterval);
+        document.getElementById('playArea').style.display = 'none';
+        document.getElementById('resultArea').style.display = 'block';
+        document.getElementById('finalScoreDisplay').innerText = `${currentScore}점`;
+
+        const badge = document.getElementById('resultBadge');
+        const msg = document.getElementById('resultMsg');
+
+        if (currentScore >= 85) {
+            badge.innerText = "👑 완벽한 복문 말하기 마스터!";
+            msg.innerText = "어려운 연결어미도 척척 활용하는 최고의 언어 박사님이에요!";
+        } else if (currentScore >= 60) {
+            badge.innerText = "🌟 훌륭한 문장 탐험가!";
+            msg.innerText = "상황에 맞춰 문장을 알맞게 연결할 수 있어요!";
+        } else {
+            badge.innerText = "🌱 쑥쑥 자라는 말하기 새싹!";
+            msg.innerText = "선생님과 한 번 더 재미있게 연습해보아요!";
+        }
+        playSound('success');
+    }
+
+    function restartFullGame() {
+        currentRound = 1;
+        currentScore = 0;
+        document.getElementById('scoreText').innerText = "0";
+        document.getElementById('playArea').style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+
+        document.getElementById('tagA').innerText = "1번 범주어";
+        document.getElementById('tagB').innerText = "2번 범주어";
+        document.getElementById('textA').innerText = "🎲 ? ? ?";
+        document.getElementById('textEnding').innerText = "🔗 ? ?";
+        document.getElementById('textB').innerText = "🎲 ? ? ?";
+
+        updateHeaderUI();
+        resetRoundUI();
+    }
+
+    // 이벤트 리스너 바인딩
+    document.getElementById('btnStep1').addEventListener('click', spinCategoriesSequential);
+    document.getElementById('btnTimer').addEventListener('click', startTimer);
+    document.getElementById('btnHint').addEventListener('click', openHintModal);
+    document.getElementById('btnCloseModal').addEventListener('click', closeHintModal);
+
+    document.getElementById('btnSuccess').addEventListener('click', () => recordResult('success'));
+    document.getElementById('btnPartial').addEventListener('click', () => recordResult('partial'));
+    document.getElementById('btnFail').addEventListener('click', () => recordResult('fail'));
+
+    document.getElementById('btnRestart').addEventListener('click', restartFullGame);
+
+    // 초기화
+    updateHeaderUI();
+</script>
+
+</body>
+</html>

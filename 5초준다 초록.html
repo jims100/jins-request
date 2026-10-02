@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>5초 스피드 낱말 퀴즈</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        :root {
+            --primary: #1B5E20;       /* 딥 포레스트 그린 */
+            --primary-accent: #2E7D32;/* 생생한 그린 */
+            --mint-light: #E8F5E9;    /* 밝은 민트 배경 */
+            --mint-subtle: #F1F8F5;   /* 소프트 배경 */
+            --accent-glow: #10B981;   /* 에메랄드 포인트 */
+            --warning: #F59E0B;       /* 경고 오렌지 */
+            --danger: #EF4444;        /* 실패/종료 레드 */
+            --text-dark: #1E293B;     /* 다크 슬레이트 텍스트 */
+            --text-muted: #52796F;    /* 차분한 세이지 텍스트 */
+            --card-border: #D1E7DD;   /* 카드 테두리 */
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(145deg, #EAF5EA 0%, #D8EEDF 50%, #CDE8D8 100%);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #FFFFFF;
+            border-radius: 28px;
+            box-shadow: 0 16px 36px rgba(27, 94, 32, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 440px;
+            padding: 24px 20px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.85rem;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-bottom: 14px;
+        }
+
+        /* 점수 및 진행 현황 */
+        .progress-box {
+            background-color: var(--mint-subtle);
+            border-radius: 18px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--card-border);
+        }
+
+        .progress-status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-bg {
+            background-color: #E2ECE5;
+            height: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #66BB6A, #2E7D32);
+            height: 100%;
+            width: 0%;
+            border-radius: 12px;
+            transition: width 0.35s ease;
+        }
+
+        /* 퀴즈 카드 */
+        .quiz-card {
+            background: linear-gradient(180deg, #F9FCFA 0%, #EFF8F3 100%);
+            border-radius: 24px;
+            padding: 18px 14px;
+            margin-bottom: 16px;
+            border: 1.5px solid #C3E6CB;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .badge-wrap {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .topic-badge {
+            background-color: #D1E7DD;
+            color: #0F5132;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+
+        .retry-badge {
+            background-color: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #FCA5A5;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .category {
+            font-size: 2.2rem;
+            color: #164E24;
+            margin: 8px 0;
+            line-height: 1.25;
+            word-break: keep-all;
+        }
+
+        /* 5초 타이머 원 */
+        .timer-circle {
+            width: 95px;
+            height: 95px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 5px solid var(--accent-glow);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+            box-sizing: border-box;
+            transition: all 0.25s ease;
+        }
+
+        .timer {
+            font-size: 3.2rem;
+            color: var(--primary-accent);
+            line-height: 1;
+        }
+
+        /* 남은 시간 2초 이하일 때 */
+        .timer-circle.warning {
+            border-color: var(--danger);
+            background-color: #FFF5F5;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .timer-circle.warning .timer {
+            color: var(--danger);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.06); }
+        }
+
+        /* 정답 목록 (힌트) */
+        .answers {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed #A3D9A5;
+        }
+
+        .answer-pill {
+            background-color: #FFFFFF;
+            color: #1E4620;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 1rem;
+            border: 1.5px solid #81C784;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        /* 버튼 컨트롤 */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        button {
+            font-family: 'Jua', sans-serif;
+            border: none;
+            border-radius: 16px;
+            padding: 13px 8px;
+            font-size: 1.15rem;
+            cursor: pointer;
+            outline: none;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s ease;
+        }
+
+        button:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        .btn-next {
+            background-color: #4A7C59;
+            color: #FFFFFF;
+            flex: 1.1;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #FFFFFF;
+            flex: 1.3;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-show {
+            background-color: #8DA994;
+            color: #FFFFFF;
+            flex: 1;
+        }
+
+        .judge-group {
+            display: none;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-success {
+            background-color: #198754;
+            color: white;
+            flex: 1;
+            padding: 14px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
+        }
+
+        .btn-fail {
+            background-color: #E65100;
+            color: white;
+            flex: 1;
+            padding: 14px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(230, 81, 0, 0.2);
+        }
+
+        /* 클리어 화면 */
+        .clear-screen {
+            display: none;
+            padding: 24px 8px;
+        }
+
+        .clear-screen h2 {
+            font-size: 2.1rem;
+            color: var(--primary);
+            margin: 12px 0 8px 0;
+        }
+
+        .clear-screen p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #10B981, #047857);
+            color: #FFFFFF;
+            padding: 14px 32px;
+            font-size: 1.25rem;
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- 플레이 화면 -->
+    <div id="playArea">
+        <h1>⚡ 5초 스피드 낱말 퀴즈</h1>
+        <div class="subtitle">5초 안에 관련된 낱말 3개를 말해요!</div>
+
+        <!-- 점수 및 진행도 -->
+        <div class="progress-box">
+            <div class="progress-status">
+                <span>⭕ 맞힌 문제: <b id="solvedCount" style="color:#1B5E20;">0</b>개</span>
+                <span>📌 남은 문제: <b id="remainCount" style="color:#C62828;">30</b>개</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- 퀴즈 카드 -->
+        <div class="quiz-card">
+            <div class="badge-wrap">
+                <div class="topic-badge" id="topicBadge">준비 운동!</div>
+                <div class="retry-badge" id="retryBadge">🔄 다시 도전!</div>
+            </div>
+            <div class="category" id="categoryName">문제를 뽑아주세요</div>
+            
+            <div class="timer-circle" id="timerCircle">
+                <div class="timer" id="timerDisplay">5</div>
+            </div>
+            
+            <div class="answers" id="answersList"></div>
+        </div>
+
+        <!-- 조작 버튼 -->
+        <div class="btn-group">
+            <button type="button" class="btn-next" id="nextBtn">🎲 문제 뽑기</button>
+            <button type="button" class="btn-start" id="startBtn">⏱️ 5초 시작!</button>
+            <button type="button" class="btn-show" id="showBtn">👀 힌트 보기</button>
+        </div>
+
+        <!-- 결과 판정 버튼 -->
+        <div class="judge-group" id="judgeGroup">
+            <button type="button" class="btn-success" id="successBtn">⭕ 성공! (완료)</button>
+            <button type="button" class="btn-fail" id="failBtn">❌ 실패 (복습하기)</button>
+        </div>
+    </div>
+
+    <!-- 클리어 화면 -->
+    <div class="clear-screen" id="clearArea">
+        <div style="font-size: 4.2rem;">🏆 🎉</div>
+        <h2>대단해요! 30문제 모두 정복!</h2>
+        <p>5초 안에 빠르게 답하며 모든 문제를 맞혔습니다!</p>
+        <button type="button" class="btn-restart" id="restartBtn">🔄 처음부터 다시하기</button>
+    </div>
+</div>
+
+<script>
+    // 총 30개의 퀴즈 데이터
+    var rawQuizData = [
+        { topic: "동물", category: "동물", words: ["강아지", "고양이", "호랑이", "사자", "토끼", "기린"] },
+        { topic: "동물", category: "새", words: ["참새", "비둘기", "까마귀", "앵무새", "오리", "독수리"] },
+        { topic: "식물", category: "과일", words: ["사과", "바나나", "딸기", "포도", "수박", "귤"] },
+        { topic: "식물", category: "채소", words: ["당근", "오이", "양파", "배추", "브로콜리", "감자"] },
+        { topic: "음식", category: "음식", words: ["김밥", "떡볶이", "계란말이", "미역국", "불고기", "주먹밥"] },
+        { topic: "음식", category: "간식", words: ["빵", "피자", "도넛", "쿠키", "사탕", "초콜릿"] },
+        { topic: "우리 집", category: "장소", words: ["거실", "안방", "내 방", "화장실", "부엌", "베란다"] },
+        { topic: "우리 집", category: "가구", words: ["침대", "책상", "TV", "냉장고", "옷장", "소파"] },
+        { topic: "의류", category: "옷", words: ["티셔츠", "셔츠", "후드티", "패딩", "점퍼", "조끼"] },
+        { topic: "의류", category: "신발", words: ["운동화", "슬리퍼", "장화", "실내화", "샌들", "구두"] },
+        { topic: "교통", category: "탈것", words: ["버스", "자전거", "자동차", "기차", "택시", "경찰차"] },
+        { topic: "교통", category: "비행체·배", words: ["비행기", "헬리콥터", "배", "우주선", "열기구", "보트"] },
+        { topic: "사람", category: "선생님", words: ["담임선생님", "영양사", "보건선생님", "체육선생님", "미술선생님", "돌봄선생님"] },
+        { topic: "사람", category: "직업", words: ["경찰관", "소방관", "의사", "요리사", "택배기사", "환경미화원"] },
+        { topic: "학용품", category: "필기구", words: ["연필", "볼펜", "지우개", "색연필", "싸인펜", "형광펜"] },
+        { topic: "학용품", category: "학용품", words: ["공책", "가방", "자", "필통", "가위", "풀"] },
+        { topic: "놀이", category: "운동", words: ["축구", "야구", "농구", "피구", "줄넘기", "태권도"] },
+        { topic: "놀이", category: "놀이", words: ["숨바꼭질", "얼음땡", "무궁화꽃", "공기놀이", "팽이치기", "종이접기"] },
+        { topic: "장소", category: "놀이장소", words: ["놀이터", "놀이공원", "워터파크", "키즈카페", "장난감가게", "영화관"] },
+        { topic: "장소", category: "구경장소", words: ["동물원", "수족관", "식물원", "도서관", "공원", "박물관"] },
+        { topic: "계절과 날씨", category: "날씨", words: ["비", "눈", "바람", "무지개", "태풍", "안개"] },
+        { topic: "계절과 날씨", category: "계절 용품", words: ["우산", "선풍기", "핫팩", "목도리", "물총", "장갑"] },
+        { topic: "우리 몸", category: "신체 부위", words: ["손가락", "발가락", "배꼽", "무릎", "팔꿈치", "엉덩이"] },
+        { topic: "우리 몸", category: "감각", words: ["눈", "코", "입", "귀", "혀", "피부"] },
+        { topic: "전자제품", category: "가전", words: ["컴퓨터", "스마트폰", "세탁기", "에어컨", "헤어드라이어", "청소기"] },
+        { topic: "전자제품", category: "주방 가전", words: ["전자레인지", "정수기", "토스터", "밥솥", "에어프라이어", "믹서기"] },
+        { topic: "자연", category: "우주·하늘", words: ["태양", "달", "별", "구름", "인공위성", "지구"] },
+        { topic: "자연", category: "지형·풍경", words: ["산", "바다", "강", "동굴", "섬", "계곡"] },
+        { topic: "생활 용품", category: "욕실 용품", words: ["수건", "치약", "칫솔", "비누", "샴푸", "휴지"] },
+        { topic: "생활 용품", category: "주방 용품", words: ["숟가락", "젓가락", "컵", "접시", "냄비", "프라이팬"] }
+    ];
+
+    // ===============================================
+    // Web Audio 시스템
+    // ===============================================
+    var audioCtx = null;
+
+    function getAudioCtx() {
+        if (!audioCtx) {
+            try {
+                var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            } catch (e) {
+                audioCtx = null;
+            }
+        }
+        return audioCtx;
+    }
+
+    function playSoundSafe(type) {
+        try {
+            var ctx = getAudioCtx();
+            if (!ctx) return;
+
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+
+            var now = ctx.currentTime;
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'tick') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            } else if (type === 'urgent-tick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1100, now);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            } else if (type === 'timeout') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(220.0, now + 0.45);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } else if (type === 'success') {
+                var notes = [523.25, 659.25, 783.99, 1046.50];
+                for (var i = 0; i < notes.length; i++) {
+                    (function(freq, delay) {
+                        var o = ctx.createOscillator();
+                        var g = ctx.createGain();
+                        o.connect(g);
+                        g.connect(ctx.destination);
+                        o.type = 'sine';
+                        o.frequency.setValueAtTime(freq, now + delay);
+                        g.gain.setValueAtTime(0.18, now + delay);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.12);
+                        o.start(now + delay);
+                        o.stop(now + delay + 0.12);
+                    })(notes[i], i * 0.07);
+                }
+            } else if (type === 'fail') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        } catch (err) {
+            console.log("Audio skipped:", err);
+        }
+    }
+
+    // ===============================================
+    // 게임 로직
+    // ===============================================
+    var remainingPool = [];
+    var currentQuiz = null;
+    var timerInterval = null;
+    var totalQuestionsCount = rawQuizData.length;
+    var solvedCount = 0;
+
+    function initGame() {
+        remainingPool = rawQuizData.map(function(item) {
+            return {
+                topic: item.topic,
+                category: item.category,
+                words: item.words.slice(),
+                isRetry: false
+            };
+        });
+
+        solvedCount = 0;
+        currentQuiz = null;
+        updateProgress();
+
+        document.getElementById('playArea').style.display = 'block';
+        document.getElementById('clearArea').style.display = 'none';
+
+        resetCardUI();
+        pickQuestion();
+    }
+
+    function updateProgress() {
+        document.getElementById('solvedCount').innerText = solvedCount;
+        document.getElementById('remainCount').innerText = remainingPool.length;
+        var percent = ((totalQuestionsCount - remainingPool.length) / totalQuestionsCount) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    function resetCardUI() {
+        clearInterval(timerInterval);
+        var timerDisplay = document.getElementById('timerDisplay');
+        var timerCircle = document.getElementById('timerCircle');
+
+        // 5초 초기화
+        timerDisplay.innerText = "5";
+        timerCircle.className = 'timer-circle';
+        document.getElementById('answersList').style.display = "none";
+        document.getElementById('judgeGroup').style.display = "none";
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('nextBtn').disabled = false;
+    }
+
+    function pickQuestion() {
+        if (remainingPool.length === 0) {
+            showClearScreen();
+            return;
+        }
+
+        resetCardUI();
+
+        var randomIndex = Math.floor(Math.random() * remainingPool.length);
+        currentQuiz = remainingPool[randomIndex];
+        currentQuiz._poolIndex = randomIndex;
+
+        document.getElementById('topicBadge').innerText = "🌿 " + currentQuiz.topic;
+        document.getElementById('categoryName').innerText = currentQuiz.category;
+
+        if (currentQuiz.isRetry) {
+            document.getElementById('retryBadge').style.display = 'inline-block';
+        } else {
+            document.getElementById('retryBadge').style.display = 'none';
+        }
+    }
+
+    function startTimer() {
+        if (!currentQuiz) return;
+
+        // 5초 설정
+        var timeLeft = 5;
+        var timerDisplay = document.getElementById('timerDisplay');
+        var timerCircle = document.getElementById('timerCircle');
+
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('nextBtn').disabled = true;
+        document.getElementById('answersList').style.display = "none";
+        document.getElementById('judgeGroup').style.display = "none";
+
+        timerDisplay.innerText = timeLeft;
+        timerCircle.className = 'timer-circle';
+
+        playSoundSafe('tick');
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(function() {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+
+            // 2초 이하일 때 긴박한 경고 표시
+            if (timeLeft <= 2 && timeLeft > 0) {
+                timerCircle.className = 'timer-circle warning';
+                playSoundSafe('urgent-tick');
+            } else if (timeLeft > 0) {
+                playSoundSafe('tick');
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerDisplay.innerText = "땡!";
+                playSoundSafe('timeout');
+                document.getElementById('judgeGroup').style.display = "flex";
+            }
+        }, 1000);
+    }
+
+    function toggleAnswers() {
+        if (!currentQuiz) return;
+        var answersList = document.getElementById('answersList');
+
+        if (answersList.style.display === "flex") {
+            answersList.style.display = "none";
+        } else {
+            answersList.innerHTML = '';
+            for (var i = 0; i < currentQuiz.words.length; i++) {
+                var pill = document.createElement('div');
+                pill.className = 'answer-pill';
+                pill.innerText = currentQuiz.words[i];
+                answersList.appendChild(pill);
+            }
+            answersList.style.display = "flex";
+        }
+    }
+
+    function recordResult(isSuccess) {
+        if (isSuccess) {
+            playSoundSafe('success');
+            remainingPool.splice(currentQuiz._poolIndex, 1);
+            solvedCount++;
+        } else {
+            playSoundSafe('fail');
+            currentQuiz.isRetry = true;
+        }
+
+        updateProgress();
+
+        if (remainingPool.length === 0) {
+            setTimeout(showClearScreen, 400);
+        } else {
+            setTimeout(pickQuestion, 350);
+        }
+    }
+
+    function showClearScreen() {
+        clearInterval(timerInterval);
+        document.getElementById('playArea').style.display = 'none';
+        document.getElementById('clearArea').style.display = 'block';
+        playSoundSafe('success');
+    }
+
+    // ===============================================
+    // 이벤트 바인딩
+    // ===============================================
+    document.getElementById('nextBtn').addEventListener('click', pickQuestion);
+    document.getElementById('startBtn').addEventListener('click', startTimer);
+    document.getElementById('showBtn').addEventListener('click', toggleAnswers);
+    document.getElementById('successBtn').addEventListener('click', function() { recordResult(true); });
+    document.getElementById('failBtn').addEventListener('click', function() { recordResult(false); });
+    document.getElementById('restartBtn').addEventListener('click', initGame);
+
+    // 최초 실행
+    initGame();
+</script>
+
+</body>
+</html>
